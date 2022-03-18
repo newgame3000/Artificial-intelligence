@@ -51,6 +51,8 @@
 В качестве примера можно привести реализацию базы знаний для проезда по перекрестку:
 
 ```python
+from pyknow import *
+
 YES = 'Да'
 NO = 'Нет'
 FOLLOW_TRAFFIC_LIGHTS = 'Следовать сигналам светофора'
@@ -64,10 +66,6 @@ ACTION_STOP = 'Остановиться и ждать'
 ACTION_CHECK_AND_GO = 'Уступить дорогу, если есть другие ТС, иначе можно ехать'
 
 class CrossroadPassage(KnowledgeEngine):
-    
-    #@DefFacts()
-    #def _initial_action(self):
-    #    yield Fact(action='greet')
     
     # Если палка смотрит влево, проезжай как королева
     @Rule(AND(Fact(regulator = YES),
@@ -93,10 +91,11 @@ class CrossroadPassage(KnowledgeEngine):
     def regulator_action_a(self):
         self.declare(Fact(final_action = ACTION_STOP))
 
-    @Rule(Fact(traffic_lights = 'Да', is_enabled = 'Да'))
-    def traf_lights_action(self):
+    @Rule(AND(Fact(traffic_lights = YES),
+              Fact(regulator = NO)))
+    def traf_lights_check(self):
         self.declare(Fact(action = FOLLOW_TRAFFIC_LIGHTS))
-    
+        
     @Rule(AND(Fact(action = FOLLOW_TRAFFIC_LIGHTS),
               Fact(light = 'Красный')))
     def traf_lights_action_stop(self):
@@ -121,15 +120,16 @@ class CrossroadPassage(KnowledgeEngine):
     def traf_lights_action_go(self):
         self.declare(Fact(final_action = ACTION_GO))
     
-    @Rule(OR(Fact(traffic_light = 'Нет'),
-             Fact(traffic_light = 'Да', is_enabled = 'Нет'),
+    @Rule(OR(AND(Fact(traffic_lights = NO),
+                 Fact(regulator = NO)),
              AND(Fact(action = FOLLOW_TRAFFIC_LIGHTS),
-                 Fact(light = 'Мигающий жёлтый'))))
+              OR(Fact(light = 'Мигающий жёлтый'),
+                 Fact(light = NO))  )))
     def check_prior_signs(self):
         self.declare(Fact(action = 'Проверить знаки приоритета'))
     
     @Rule(AND(Fact(action = 'Проверить знаки приоритета'),
-              Fact(prior_signs = 'Да')))
+              Fact(prior_signs = YES)))
     def prior_signs_action(self):
         self.declare(Fact(action = 'Следовать знакам приоритета'))
     
@@ -162,7 +162,7 @@ class CrossroadPassage(KnowledgeEngine):
         self.declare(Fact(final_action = ACTION_CHECK_AND_GO))
     
     @Rule(AND(Fact(action = 'Проверить знаки приоритета'),
-              Fact(prior_signs = 'Нет')))
+              Fact(prior_signs = NO)))
     def check_road_type(self):
         self.declare(Fact(action = 'Проверить покрытие дороги'))
 
@@ -178,10 +178,9 @@ class CrossroadPassage(KnowledgeEngine):
     def final_check_road_not_main(self):
         self.declare(Fact(action = NOT_MAIN_ROAD))
     
-    # Вот тут ничего не понял, надо уточнить
-    @Rule(Fact(spec_trans = 'Да'))
+    @Rule(Fact(spec_trans = YES))
     def spec_trans_action(self):
-        self.declare(Fact(action = 'Уступить дорогу транспорту'))
+        self.declare(Fact(final_action = 'Уступить дорогу транспорту'))
     
     @Rule(AND(Fact(action = 'Проверить покрытие дороги'), Fact(my_road = W()), Fact(another_road = W()), ))
     def check_trans_type(self):
@@ -220,8 +219,40 @@ class CrossroadPassage(KnowledgeEngine):
 
 ## Протокол работы системы
 
-Приведите несколько примеров работы системы, проиллюстрируйте их фрагментами деревьев вывода.
+Для демонстрации работы системы используется генератор тестов.
+
+Перекрёстки:
+```
+[Fact(regulator='Да'), Fact(regulator_direction='Вправо'), Fact(traffic_lights='Нет'), Fact(light='Мигающий жёлтый'), Fact(light_type='Стрелка влево'), Fact(prior_signs='Да'), Fact(prior_sign='Главная дорога'), Fact(my_road='Асфальт'), Fact(car_type='Мотоцикл')]
+--
+Остановиться и ждать
+--
+[Fact(regulator='Да'), Fact(regulator_direction='На нас'), Fact(traffic_lights='Да'), Fact(light='Зелёный'), Fact(light_type='Нет стрелки'), Fact(prior_signs='Да'), Fact(prior_sign='Преимущество встречного движения'), Fact(my_road='Щебёнка'), Fact(car_type='Велосипед')]
+--
+Повернуть направо, иначе остановиться и ждать
+--
+[Fact(regulator='Да'), Fact(regulator_direction='Влево'), Fact(traffic_lights='Да'), Fact(light='Мигающий жёлтый'), Fact(light_type='Стрелка вправо'), Fact(prior_signs='Нет'), Fact(prior_sign='Преимущество встречного движения'), Fact(my_road='Щебёнка'), Fact(car_type='Автомобиль')]
+--
+Можно ехать
+--
+[Fact(regulator='Нет'), Fact(regulator_direction='Вправо'), Fact(traffic_lights='Да'), Fact(light='Зелёный'), Fact(light_type='Нет стрелки'), Fact(prior_signs='Да'), Fact(prior_sign='Преимущество встречного движения'), Fact(my_road='Грязь'), Fact(car_type='Мотоцикл')]
+--
+Можно ехать
+--
+[Fact(regulator='Нет'), Fact(regulator_direction='От нас'), Fact(traffic_lights='Да'), Fact(light='Нет'), Fact(light_type='Нет стрелки'), Fact(prior_signs='Нет'), Fact(prior_sign='Главная дорога'), Fact(my_road='Бетон'), Fact(car_type='Трамвай')]
+--
+Можно ехать
+--
+```
+
+Навигатор:
+```
+[Fact(navigator_direction='Назад'), Fact(forbidden_sign='Да'), Fact(ban_on_turning='Да'), Fact(one_way_traffic='Нет'), Fact(stop_15_meters='Да')]
+--
+Развернуться на ближайшем перекрёстке
+--
+```
 
 ## Выводы
 
- Выполнив данную лабораторную работу, мы получили интересный опыт в работе в команде. Всё началось с выбора темы, рассматривалось очень много вариантов, например, анализатор ошибок на атомной электростанции (этот вариант откинули из-за сложности самой области), рекомендации автомобилей, комплектующих компьютера и многое другое. Но решили остановаться на достаточно интересной, и, как нам показалось, актуальной теме - автопилот. Предполагалось, что  информация, которую анализирует наша система, может поступать, например, с помощью компьютерного зрения. И в итоге наш искусственный интеллект выдаёт рекомендации водителю как поступать, не нарушая правила дорожного движения. Были даже идеи, что экспертная система полностью возьмёт под контроль движение машины, но для этого нужно гараздо больше данных, и работа окажется намного сложнее. Следующая трудность, с которой мы столкнулись - составление плана действий и распределение деятельности. Тут у нас происходило всё как-то хаотично: решения приходили и принимались спантанно, по мере изучения документации для pyknow. Но всё-таки получилась некая полная картина. С поставленной задачей мы справились. После того, как каждый понял, что надо делать, проблем не возникало и результат был достигнут. Данная работа научила нас создавать экспертные системы, работать в команде, а также находить оригинальные выходы из разных ситуаций. 
+Выполнив данную лабораторную работу, мы получили интересный опыт в работе в команде. Всё началось с выбора темы, рассматривалось очень много вариантов, например, анализатор ошибок на атомной электростанции (этот вариант откинули из-за сложности самой области), рекомендации автомобилей, комплектующих компьютера и многое другое. Но решили остановаться на достаточно интересной, и, как нам показалось, актуальной теме - автопилот. Предполагалось, что  информация, которую анализирует наша система, может поступать, например, с помощью компьютерного зрения. И в итоге наш искусственный интеллект выдаёт рекомендации водителю как поступать, не нарушая правила дорожного движения. Были даже идеи, что экспертная система полностью возьмёт под контроль движение машины, но для этого нужно гараздо больше данных, и работа окажется намного сложнее. Следующая трудность, с которой мы столкнулись - составление плана действий и распределение деятельности. Тут у нас происходило всё как-то хаотично: решения приходили и принимались спантанно, по мере изучения документации для pyknow. Но всё-таки получилась некая полная картина. С поставленной задачей мы справились. После того, как каждый понял, что надо делать, проблем не возникало и результат был достигнут. Данная работа научила нас создавать экспертные системы, работать в команде, а также находить оригинальные выходы из разных ситуаций. 
