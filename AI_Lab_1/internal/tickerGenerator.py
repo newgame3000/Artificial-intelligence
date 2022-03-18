@@ -16,6 +16,7 @@ class Generator:
         self.nav = Navigator()
         self.crPass = CrossroadPassage()
 
+#-----------------------------сюды вставлять факты-------------------------------------
         # ----Navigator-----------
         nav_facts = [
             [Fact(navigator_direction='Нет'),
@@ -49,7 +50,6 @@ class Generator:
 
             [Fact(traffic_lights='Да', is_enabled='Да'),
              Fact(traffic_lights='Да', is_enabled=NO),
-             Fact(traffic_lights=NO, is_enabled='Да'),
              Fact(traffic_lights=NO, is_enabled=NO)],
 
             # ивенты светофора
@@ -90,7 +90,6 @@ class Generator:
 
     def start(self):
         while True:
-            sleep(TICKER)
             event_get = rand.randint(0, len(self.events)-1)
             facts = []
 
@@ -100,6 +99,7 @@ class Generator:
             print(facts)
 
             self.events[event_get][0].reset()
+            sleep(TICKER)
             self.events[event_get][0].factz(facts)
             print('--')
             self.events[event_get][0].run()
