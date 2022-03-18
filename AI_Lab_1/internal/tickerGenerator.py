@@ -89,8 +89,7 @@ class Generator:
              ]
         ]
 
-        # self.events = [[self.nav, nav_facts], [self.crPass, crPass_facts]]
-        self.events = [[self.crPass, crPass_facts]]
+        self.events = [[self.nav, nav_facts], [self.crPass, crPass_facts]]
 
     def start(self):
         while True:
