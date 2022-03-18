@@ -61,6 +61,9 @@ class Generator:
              Fact(light_type='Стрелка влево'),
              Fact(light_type='Стрелка вправо')],
 
+            [Fact(prior_signs=NO),
+             Fact(prior_signs=YES)],
+
             # знаки приоритета и правило "правой руки"
             [Fact(prior_sign='Главная дорога'),
              Fact(prior_sign='Уступи дорогу'),
@@ -86,7 +89,8 @@ class Generator:
              ]
         ]
 
-        self.events = [[self.nav, nav_facts], [self.crPass, crPass_facts]]
+        # self.events = [[self.nav, nav_facts], [self.crPass, crPass_facts]]
+        self.events = [[self.crPass, crPass_facts]]
 
     def start(self):
         while True:
@@ -99,11 +103,11 @@ class Generator:
             print(facts)
 
             self.events[event_get][0].reset()
-            sleep(TICKER)
             self.events[event_get][0].factz(facts)
             print('--')
             self.events[event_get][0].run()
             print('--')
+            sleep(TICKER)
 
 
 gen = Generator()
