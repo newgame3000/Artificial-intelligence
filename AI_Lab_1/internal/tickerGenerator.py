@@ -48,14 +48,14 @@ class Generator:
              Fact(regulator_direction='На нас'),
              Fact(regulator_direction='От нас')],
 
-            [Fact(traffic_lights='Да', is_enabled='Да'),
-             Fact(traffic_lights='Да', is_enabled=NO),
-             Fact(traffic_lights=NO, is_enabled=NO)],
+            [Fact(traffic_lights=YES),
+             Fact(traffic_lights=NO)],
 
             # ивенты светофора
             [Fact(light='Красный'),
              Fact(light='Зелёный'),
-             Fact(light='Мигающий жёлтый')],
+             Fact(light='Мигающий жёлтый'),
+             Fact(light=NO)],
 
             [Fact(light_type='Нет стрелки'),
              Fact(light_type='Стрелка влево'),
