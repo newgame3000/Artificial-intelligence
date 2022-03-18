@@ -29,28 +29,28 @@ class Navigator(KnowledgeEngine):
     def navigator_turn_around_false(self):
         self.declare(Fact(final_action = ACTION_END))
 
-    @Rule(AND(Fact(navigator_direction = 'Назад'),
-              OR(AND(Fact(ban_on_turning = YES),
-                     Fact(one_way_traffic = YES)),
-                 Fact(one_way_traffic = YES))))
+    @Rule(AND(Fact(navigator_direction = 'Назад'), 
+              Fact(ban_on_turning = YES),
+              Fact(one_way_traffic = YES)))
     def all_right_turn(self):
         self.declare(Fact(final_action = ACTION_STRAIGHT_CROSSROAD_TURN))
 
-    @Rule(OR(AND(Fact(navigator_direction = 'Назад'),
-                 Fact(ban_on_turning = YES),
-                 Fact(one_way_traffic = NO)),
-             AND(Fact(navigator_direction = 'Назад'),
-                 Fact(ban_on_turning = NO),
-                 Fact(stop_15_meters = YES))))
+    @Rule(OR(
+          AND(Fact(navigator_direction = 'Назад'),
+              Fact(ban_on_turning = YES),
+              Fact(one_way_traffic = NO)),
+          AND(Fact(navigator_direction = 'Назад'),
+              Fact(ban_on_turning = NO),
+              Fact(stop_15_meters = YES))))
     def crossroad_turn(self):
         self.declare(Fact(final_action = ACTION_CROSSROAD_TURN))
 
-    @Rule(OR(AND(Fact(navigator_direction = 'Прямо'), 
-                 Fact(forbidden_sign = YES)),
-             AND(Fact(navigator_direction = 'Назад'),
-                 Fact(ban_on_turning = NO),
-                 Fact(stop_15_meters = NO),
-                 Fact(one_way_traffic = NO))))
+    @Rule(OR(
+          AND(Fact(navigator_direction = 'Прямо'), 
+              Fact(forbidden_sign = YES)),
+          AND(Fact(navigator_direction = 'Назад'),
+              Fact(ban_on_turning = NO),
+              Fact(stop_15_meters = NO))))
     def turn_true(self):
         self.declare(Fact(final_action = ACTION_TURN_AROUND))
 
