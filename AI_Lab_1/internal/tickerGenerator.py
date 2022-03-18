@@ -3,6 +3,7 @@ import time
 
 from Navigator import Navigator
 from CrossroadPassage import CrossroadPassage
+from Crosswalk import Crosswalk
 from pyknow import *
 from time import *
 
@@ -15,6 +16,7 @@ class Generator:
     def __init__(self):
         self.nav = Navigator()
         self.crPass = CrossroadPassage()
+        self.crWalk = Crosswalk()
 
 #-----------------------------сюды вставлять факты-------------------------------------
         # ----Navigator-----------
@@ -89,7 +91,15 @@ class Generator:
              ]
         ]
 
-        self.events = [[self.nav, nav_facts], [self.crPass, crPass_facts]]
+        # ----Crosswalk-----------
+        crWalk_facts = [
+            [Fact("Пешеходный переход")],
+
+            [Fact(pedestrians=YES),
+             Fact(pedestrians=NO)],
+        ]
+
+        self.events = [[self.nav, nav_facts], [self.crPass, crPass_facts], [self.crWalk, crWalk_facts]]
 
     def start(self):
         while True:
